@@ -22,6 +22,6 @@ class Users(models.Model):
     contact_number = models.CharField(max_length=55, blank=False)
     email = models.EmailField(max_length=55, blank=True)
     username = models.CharField(max_length=55, blank=False, unique=True)
-    password = models.CharField(max_length=55, blank=False)
+    password = models.CharField(max_length=255, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
