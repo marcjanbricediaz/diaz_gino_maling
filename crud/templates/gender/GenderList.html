@@ -1,48 +1,35 @@
 {% extends "layout/base.html" %}
-
-{% block 'title' %}
-Gender List
-{% endblock 'title' %}
+{% load static %}
+{% block title %}Gender List{% endblock %}
 
 {% block 'content' %}
 
-
-
 {% include "includes/Sidebar.html" %}
 {% include "includes/ToastMessage.html" %}
-<div class="p-2 sm:ml-64 md:mt-10">
-    <div class="relative overflow-x-auto shadow-sm rounded-sm">
-        <table class="w-full">
-            <thead class="text-sm text-white bg-blue-600">
-                <tr>
-                    <th class="px-6 py-3">
-                        Gender Name
-                    </th>
-                    <th class="px-6 py-3">
-                        Action
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="text-m text-black">
-                {% for gender in genders %}
-                    <tr class="  hover:bg-gray-100 border-b border-gray-700">
-                        <td class="px-6 py-3">{{ gender.gender }}</td>
-                        <td class ="px-6 py-3"> 
-                            <div class="inline-flex shadow-sm">
-                                <a href="/gender/edit/{{gender.gender_id}}" class="bg-green-600 px-3 py-2.5 front-medium text-white rounded-s-sm hover:bg-green-700
-                                    hover:outline-none">edit</a>
-                                    <a href="/gender/delete/{{gender.gender_id}}" class="bg-red bg-red-600 px-3 py-2.5 font-medium text-sm text-white rounded-e-sm hover:bg-red-700" >Delete</a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div class="p-2 sm:ml-64 mt-16 md:mt-14">
+    <h2 class="text-2xl font-bold mb-4">Gender List</h2>
+    <table class="min-w-full bg-white shadow-md rounded">
+        <thead class="bg-blue-600 text-white">
+            <tr>
+                <th class="py-2 px-4">Gender</th>
+                <th class="py-2 px-4">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for gender in genders %}
+            <tr class="border-b hover:bg-gray-100">
+                <td class="py-2 px-4">{{ gender.gender }}</td>
+                <td class="py-2 px-4">
+                    <a href="/gender/edit/{{ gender.gender_id }}" class="text-blue-600 hover:underline">Edit</a>
+                    <a href="/gender/delete/{{ gender.gender_id }}" class="text-red-600 hover:underline">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center py-4 text-gray-500">No genders found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-
-
-
 {% endblock 'content' %}
-
-
-

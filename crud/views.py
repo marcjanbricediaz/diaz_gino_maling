@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
-from django.contrib import messages
 from .models import Genders, Users
-# Create your views here.
 
+# --------- Gender CRUD ---------
 
 def gender_list(request):
     try:
@@ -14,57 +14,44 @@ def gender_list(request):
         }
         return render(request, 'gender/GenderList.html', data)
     except Exception as e:
-        return HttpResponse(f'Error occured during load genders {e}')
-
+        return HttpResponse(f"Error occurred loading genders: {e}")
 
 def add_gender(request):
-    try:
-        if request.method == 'POST':
-            gender = request.POST.get('gender')
-            Genders.objects.create(gender=gender).save()
-            messages.success(request, 'Gender Added Successfully!')
-            return redirect('/gender/list')
-        else:
-            return render(request, 'gender/AddGender.html')
-    except Exception as e:
-        return HttpResponse(f'Error occured during the add Gender: {e}')
-    
+    if request.method == 'POST':
+        gender_name = request.POST.get('gender')
+        Genders.objects.create(gender=gender_name)
+        messages.success(request, "Gender Added Successfully!")
+        return redirect('gender/list/')
+    return render(request, 'gender/AddGender.html')
+
 def edit_gender(request, genderId):
     try:
+        genderObj = Genders.objects.get(pk=genderId)
         if request.method == 'POST':
-            genderObj =  Genders.objects.get(pk=genderId)
-
-            gender = request.POST.get('gender')
-
-            genderObj.gender = gender
+            genderObj.gender = request.POST.get('gender')
             genderObj.save()
-
+            messages.success(request, "Gender Updated Successfully!")
             data = {
                 'gender': genderObj
             }
- 
-            messages.success(request, 'Gender updated Succesfully!')
-            return render (request, 'gender/EditGender.html', data) 
-        else:    
-            genderObj =  Genders.objects.get(pk=genderId)
-
+            return render(request, 'gender/EditGender.html', data)
+        else:
+            genderObj = Genders.objects.get(pk=genderId)
             data = {
                 'gender': genderObj
-            } 
+            }
+            return render(request, 'gender/EditGender.html', data)
+    except Exception as e:
+        return HttpResponse(f"Error editing gender: {e}")
 
-            return render(request,'gender/EditGender.html', data)
-      
-    except  Exception as e:
-        return HttpResponse(f'Error occurred during edit gender: {e}')    
-    
 def delete_gender(request, genderId):
     try:
+        genderObj = Genders.objects.get(pk=genderId)
         if request.method == 'POST':
-            genderObj = Genders.objects.get(pk=genderId)
             genderObj.delete()
+            messages.success(request, "Gender Deleted Successfully!")
 
-            messages.success(request, 'Gender Deleted Successfully!')
-            return redirect('/gender/list')
+            return redirect('/gender/list/')
         else:
             genderObj = Genders.objects.get(pk=genderId)
             data = {
@@ -72,56 +59,107 @@ def delete_gender(request, genderId):
             }
             return render(request, 'gender/DeleteGender.html', data)
     except Exception as e:
-        return HttpResponse(f'Error occured during delete gender {e}')
-    
-# crud for users
+        return HttpResponse(f"Error deleting gender: {e}")
+
+# --------- User CRUD ---------
 
 def user_list(request):
     try:
-        userObj = Users.objects.select_related('gender')
+        users = Users.objects.select_related('gender')
         data = {
-            'users': userObj
+            'users': users
         }
         return render(request, 'user/userList.html', data)
     except Exception as e:
-        return HttpResponse(f'Something Occured during load Users: {e}')
-
+        return HttpResponse(f"Error loading users: {e}")
 
 def add_user(request):
     try:
         if request.method == 'POST':
+            profile = request.FILES.get('profile')
             fullname = request.POST.get('full_name')
             gender = request.POST.get('gender')
-            birthDate = request.POST.get('birthDate')
+            birth_date = request.POST.get('birth_date')
             address = request.POST.get('address')
-            contactNumber = request.POST.get('contact_number')
+            contact_number = request.POST.get('contact_number')
             email = request.POST.get('email')
             username = request.POST.get('username')
             password = request.POST.get('password')
-            hashedPassword = make_password(password)
-            confirmPassword = request.POST.get('confirm_password')
-            print("Gender ID received:", gender)
-            print("Available genders:", Genders.objects.all().values())
+            confirm_password = request.POST.get('confirm_password')
+
+
+            if password != confirm_password:
+                messages.error(request, 'Passwords do not match!')
+                return redirect('add_user')
+            
+            if len(password) <8:
+                messages.error(request, 'Passwords must be at least 8 characters!')
+                return redirect('add_user')
+
+
+
+
             Users.objects.create(
-                full_name = fullname,
-                gender = Genders.objects.get(pk=gender),
-                birth_date = birthDate,
-                address = address,
-                contact_number = contactNumber,
-                email = email,
-                username = username,
-                password = hashedPassword
-            ).save()
-
-            messages.success(request, 'User Added Successfully!')
-            return redirect('/user/add')
-
+                full_name=fullname,
+                gender= Genders.objects.get(pk=gender),
+                birth_date=birth_date,
+                address=address,
+                contact_number=contact_number,
+                email=email,
+                username=username,
+                password=password,
+                profile=profile
+            )
+            messages.success(request, "User Added Successfully!")
+            return redirect('user_list')
         else:
-
-            genderObj = Genders.objects.all()
+            gender_list = Genders.objects.all()
             data = {
-                'genders': genderObj
+                'genders': gender_list
             }
             return render(request, 'user/addUser.html', data)
     except Exception as e:
-        return HttpResponse(f'Something occurred during add gender: {e}')
+        return HttpResponse(f'somethin occured during adding new user {e}')
+    
+def edit_user(request, userId):
+    try:
+        if request.method == 'POST':
+            userObj = Users.objects.get(pk=userId)
+
+            profile = request.FILES.get('profile')
+            fullname = request.POST.get('full_name')
+            gender = request.POST.get('gender')
+            birth_date = request.POST.get('birth_date')
+            address = request.POST.get('address')
+            contact_number = request.POST.get('contact_number')
+            email = request.POST.get('email')
+            username = request.POST.get('username')
+
+            userObj.full_name = fullname
+            userObj.gender = Genders.objects.get(pk=gender)
+            userObj.birth_date = birth_date
+            userObj.address = address
+            userObj.contact_number = contact_number
+            userObj.email = email
+            userObj.username = username
+            userObj.profile = profile
+            userObj.save()
+
+            messages.success(request, 'User updated Successfully')
+            data = {
+                'user': userObj
+            }
+            return render(request, 'user/editUser.html', data)
+        else:
+            userObj = Users.objects.get(pk=userId)
+            gender = Genders.objects.all()
+            data = {
+                'user': userObj,
+                'genders': gender
+            }
+            return render(request, 'user/editUser.html', data)
+
+
+    except Exception as e:
+        return HttpResponse(f'Something occured during edit user {e}')
+        
