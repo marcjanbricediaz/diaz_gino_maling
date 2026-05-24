@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
 from .models import Genders, Users
+from django.core.paginator import Paginator
 
 # --------- Gender CRUD ---------
 
@@ -17,12 +18,16 @@ def gender_list(request):
         return HttpResponse(f"Error occurred loading genders: {e}")
 
 def add_gender(request):
-    if request.method == 'POST':
-        gender_name = request.POST.get('gender')
-        Genders.objects.create(gender=gender_name)
-        messages.success(request, "Gender Added Successfully!")
-        return redirect('gender/list/')
-    return render(request, 'gender/AddGender.html')
+    try:
+        if request.method == 'POST':
+            gender_name = request.POST.get('gender')
+            Genders.objects.create(gender=gender_name)
+            messages.success(request, "Gender Added Successfully!")
+            return redirect('/gender/list')
+        else:
+            return render(request, 'gender/AddGender.html')
+    except Exception as e:
+        return HttpResponse(f'something wrong when adding a gender {e}')
 
 def edit_gender(request, genderId):
     try:
@@ -66,8 +71,12 @@ def delete_gender(request, genderId):
 def user_list(request):
     try:
         users = Users.objects.select_related('gender')
+        paginator = Paginator(users, 5)  # 5 users per page
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
         data = {
-            'users': users
+            'users': page_obj,
+            'page_obj': page_obj,
         }
         return render(request, 'user/userList.html', data)
     except Exception as e:
@@ -126,7 +135,6 @@ def edit_user(request, userId):
         if request.method == 'POST':
             userObj = Users.objects.get(pk=userId)
 
-            profile = request.FILES.get('profile')
             fullname = request.POST.get('full_name')
             gender = request.POST.get('gender')
             birth_date = request.POST.get('birth_date')
@@ -135,6 +143,15 @@ def edit_user(request, userId):
             email = request.POST.get('email')
             username = request.POST.get('username')
 
+            if Users.objects.filter(username=username).exclude(pk=userId).exists():
+                messages.error(request, 'Username is already taken. Please choose a different one.')
+                gender_list = Genders.objects.all()
+                data = {
+                    'user': userObj,
+                    'genders': gender_list
+                }
+                return render(request, 'user/editUser.html', data)
+
             userObj.full_name = fullname
             userObj.gender = Genders.objects.get(pk=gender)
             userObj.birth_date = birth_date
@@ -142,8 +159,11 @@ def edit_user(request, userId):
             userObj.contact_number = contact_number
             userObj.email = email
             userObj.username = username
-            userObj.profile = profile
+            if request.FILES.get('profile'):
+                userObj.profile = request.FILES.get('profile')
+
             userObj.save()
+
 
             messages.success(request, 'User updated Successfully')
             data = {
@@ -162,4 +182,21 @@ def edit_user(request, userId):
 
     except Exception as e:
         return HttpResponse(f'Something occured during edit user {e}')
+    
+def delete_user(request, userId):
+    try:
+        if request.method == 'POST':
+            userObj = Users.objects.get(pk=userId)
+            userObj.delete()
+            messages.success(request, 'Successfully Deleted the user!')
+            return redirect('user_list')
+        else:
+
+            user = Users.objects.get(pk=userId)
+            data = {
+                'user': user
+            }
+            return render(request, 'user/deleteUser.html', data)
+    except Exception as e:
+        return HttpResponse(f'something wrong with deleting the user {e}')
         

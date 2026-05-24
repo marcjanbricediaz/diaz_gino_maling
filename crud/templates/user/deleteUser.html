@@ -1,0 +1,37 @@
+{% extends "layout/base.html" %}
+
+{% block 'title' %} Add User {% endblock 'title' %}
+
+{% block 'content' %}
+
+{% include "includes/sidebar.html" %}
+{% include "includes/ToastMessage.html" %}
+
+<div class="p-2 sm:ml-64 mt-16 md:mt-14">
+  <div class="mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+      <form method="POST" action="/user/delete/{{ user.user_id }}" enctype="multipart/form-data" class="bg-white p-6 rounded shadow-md">
+        {% csrf_token %}
+            <div class="mb-5">
+                <label class="block mb-2 text-sm font-medium text-gray-900">Profile Image</label>
+                {% if user.profile %}
+                <img src="{{ user.profile.url}}" alt="Profile Picture" class="w-24 h-24 rounded- full object-cover border border-gray-300 mb-2"/>
+                {% else %}
+            </div class="w-24 h-24 rounded-full bg-gray-300 felx items-center justify-center mb-2">
+            <span class="text-gray-600 text-2xl font-bold">{{ user.full_name|first|upper }}</span>
+        </div>
+        {% endif %}
+        <p>Name: {{ user.full_name }}</p>
+        <p>Do you want to Delete This User?</p>
+        
+
+
+        <button type="submit" class="bg-red-600 text-sm font-medium text-white px-3 py-2.5 rounded-sm shadow-sm cursor-pointer hover:bg-red-700 focus:outline-none">
+          Delete User
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock 'content' %}

@@ -14,4 +14,5 @@ urlpatterns = [
     path('user/list/', views.user_list, name='user_list'),
     path('user/add/', views.add_user, name='add_user'),
     path('user/edit/<int:userId>/', views.edit_user, name='edit_user'),
+    path('user/delete/<int:userId>', views.delete_user, name='delete_user'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
